@@ -21,7 +21,7 @@ public sealed class BookEntity
 
     public Book ToModel()
     {
-        var tags = JsonSerializer.Deserialize<IReadOnlyList<string>>(TagsJson) ?? [];
+        var tags = JsonSerializer.Deserialize<List<string>>(TagsJson) ?? new List<string>();
 
         return new Book
         {

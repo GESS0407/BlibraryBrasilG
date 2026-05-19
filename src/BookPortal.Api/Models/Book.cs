@@ -12,7 +12,7 @@ public sealed record Book
     public required string AgeRange { get; init; }
     public required string CoverColor { get; init; }
     public required string CoverAccent { get; init; }
-    public required IReadOnlyList<string> Tags { get; init; }
+    public required List<string> Tags { get; init; }
     public int CopiesAvailable { get; init; }
     public DateTimeOffset AddedAt { get; init; }
 }
