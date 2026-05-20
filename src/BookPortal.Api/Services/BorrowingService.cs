@@ -22,6 +22,12 @@ public sealed class BorrowingService
         {
             return BorrowResult.Failure("Informe um documento de usuario para reservar a obra.");
         }
+        var user = await _repository.GetUserByCpfAsync(request.UserDocument);
+        
+        if (user is null)
+        {
+            return BorrowResult.Failure("Usuario não encontrado.");
+        }
 
         var book = await _repository.GetByIdAsync(request.BookId);
         if (book is null)
@@ -45,8 +51,7 @@ public sealed class BorrowingService
         {
             Id = Guid.NewGuid(),
             BookId = book.Id,
-            BookTitle = book.Title,
-            UserDocument = request.UserDocument.Trim(),
+            UserId = user.Id,
             BorrowedAt = now,
             DueAt = now.AddDays(_options.LoanDays)
         };

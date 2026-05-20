@@ -46,9 +46,11 @@ public sealed class LibraryDbContext : DbContext
         {
             entity.ToTable("Loans");
             entity.HasKey(loan => loan.Id);
-            entity.Property(loan => loan.UserDocument).HasMaxLength(64).IsRequired();
-            entity.Property(loan => loan.BookTitle).HasMaxLength(240).IsRequired();
-            entity.HasIndex(loan => loan.UserDocument);
+            entity.Property(l => l.UserId)
+                .IsRequired();
+            entity.Property(l => l.BookId)
+                .IsRequired();
+            entity.HasIndex(l => l.UserId);
             entity.HasOne<BookEntity>()
                 .WithMany()
                 .HasForeignKey(loan => loan.BookId)

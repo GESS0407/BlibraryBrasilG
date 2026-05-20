@@ -12,5 +12,9 @@ public interface ILibraryRepository
     Task<int> GetActiveLoanCountAsync(string userDocument);
     Task<Loan> CreateLoanAsync(Loan loan);
     Task<IReadOnlyList<Loan>> GetLoansByUserAsync(string userDocument);
+    Task<User?> GetUserByCpfAsync(string cpf)
+    {
+        return Task.FromResult<User?>(null);
+    }
 }
 

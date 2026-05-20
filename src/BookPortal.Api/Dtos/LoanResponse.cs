@@ -5,8 +5,9 @@ namespace BookPortal.Api.Dtos;
 public sealed record LoanResponse(
     Guid Id,
     Guid BookId,
-    string BookTitle,
-    string UserDocument,
+    string? BookTitle,
+    int UserId,
+    string? UserName,
     DateTimeOffset BorrowedAt,
     DateTimeOffset DueAt,
     DateTimeOffset? ReturnedAt)
@@ -15,8 +16,9 @@ public sealed record LoanResponse(
         new(
             loan.Id,
             loan.BookId,
-            loan.BookTitle,
-            loan.UserDocument,
+            loan.Book?.Title,
+            loan.UserId,
+            loan.User?.Name,
             loan.BorrowedAt,
             loan.DueAt,
             loan.ReturnedAt);

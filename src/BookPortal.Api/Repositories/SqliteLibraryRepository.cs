@@ -89,10 +89,22 @@ public sealed class SqliteLibraryRepository : ILibraryRepository
         ];
     }
 
-    public Task<int> GetActiveLoanCountAsync(string userDocument) =>
-        _db.Loans.CountAsync(loan =>
-            loan.UserDocument == userDocument.Trim() &&
+    public async Task<int> GetActiveLoanCountAsync(string userDocument)
+    {
+        var cpf = userDocument.Trim();
+
+        var user = await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Cpf == cpf);
+        if (user is null)
+        {
+            return 0;
+        }
+
+        return await _db.Loans.CountAsync(loan =>
+            loan.UserId == user.Id && 
             loan.ReturnedAt == null);
+    }
 
     public async Task<Loan> CreateLoanAsync(Loan loan)
     {
@@ -107,13 +119,31 @@ public sealed class SqliteLibraryRepository : ILibraryRepository
 
     public async Task<IReadOnlyList<Loan>> GetLoansByUserAsync(string userDocument)
     {
+        var cpf = userDocument.Trim();
+
+        var user = await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Cpf == cpf);
+
+        if (user is null)
+        {
+            return [];
+        }
+
         var loans = await _db.Loans
             .AsNoTracking()
-            .Where(loan => loan.UserDocument == userDocument.Trim())
+            .Where(loan => loan.UserId == user.Id)
             .OrderByDescending(loan => loan.BorrowedAt)
             .ToListAsync();
 
         return loans.Select(loan => loan.ToModel()).ToList();
     }
+
+    public async Task<User?> GetUserByCpfAsync(string cpf)
+    {
+        return await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Cpf == cpf.Trim());
+    }   
 }
 

@@ -6,8 +6,8 @@ public sealed class LoanEntity
 {
     public Guid Id { get; set; }
     public Guid BookId { get; set; }
-    public string BookTitle { get; set; } = string.Empty;
-    public string UserDocument { get; set; } = string.Empty;
+    public int UserId{get; set;}
+
     public DateTimeOffset BorrowedAt { get; set; }
     public DateTimeOffset DueAt { get; set; }
     public DateTimeOffset? ReturnedAt { get; set; }
@@ -17,8 +17,7 @@ public sealed class LoanEntity
         {
             Id = Id,
             BookId = BookId,
-            BookTitle = BookTitle,
-            UserDocument = UserDocument,
+            UserId = UserId,
             BorrowedAt = BorrowedAt,
             DueAt = DueAt,
             ReturnedAt = ReturnedAt
@@ -29,8 +28,7 @@ public sealed class LoanEntity
         {
             Id = loan.Id,
             BookId = loan.BookId,
-            BookTitle = loan.BookTitle,
-            UserDocument = loan.UserDocument,
+            UserId = loan.UserId,
             BorrowedAt = loan.BorrowedAt,
             DueAt = loan.DueAt,
             ReturnedAt = loan.ReturnedAt

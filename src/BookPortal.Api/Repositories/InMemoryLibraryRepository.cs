@@ -84,7 +84,7 @@ public sealed class InMemoryLibraryRepository : ILibraryRepository
         lock (_gate)
         {
             return Task.FromResult(_loans.Count(loan =>
-                loan.UserDocument.Equals(userDocument.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                loan.UserId.ToString() == userDocument.Trim() &&
                 loan.ReturnedAt is null));
         }
     }
@@ -110,7 +110,7 @@ public sealed class InMemoryLibraryRepository : ILibraryRepository
         lock (_gate)
         {
             var loans = _loans
-                .Where(loan => loan.UserDocument.Equals(userDocument.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Where(loan => loan.UserId.ToString() == userDocument.Trim())
                 .OrderByDescending(loan => loan.BorrowedAt)
                 .ToList();
 
