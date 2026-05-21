@@ -26,7 +26,7 @@ public sealed class BorrowingService
         
         if (user is null)
         {
-            return BorrowResult.Failure("Usuario não encontrado.");
+            return BorrowResult.Failure("Usuario nao encontrado.");
         }
 
         var book = await _repository.GetByIdAsync(request.BookId);

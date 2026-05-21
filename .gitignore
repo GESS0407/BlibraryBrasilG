@@ -6,4 +6,5 @@ obj/
 .vs/
 .vscode/
 node_modules/
+server*.log
 
