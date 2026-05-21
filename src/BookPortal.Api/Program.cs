@@ -1,7 +1,9 @@
 using BookPortal.Api.Data;
 using BookPortal.Api.Dtos;
+using BookPortal.Api.Models;
 using BookPortal.Api.Repositories;
 using BookPortal.Api.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,16 +13,10 @@ builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection("Da
 builder.Services.AddScoped<BorrowingService>();
 builder.Services.AddSingleton<DatabaseInitializer>();
 
-if (builder.Configuration.GetValue<bool>("Database:UseSqlite"))
-{
-    builder.Services.AddDbContext<LibraryDbContext>(options =>
-        options.UseSqlite(builder.Configuration.GetConnectionString("Library")));
-    builder.Services.AddScoped<ILibraryRepository, SqliteLibraryRepository>();
-}
-else
-{
-    builder.Services.AddSingleton<ILibraryRepository, InMemoryLibraryRepository>();
-}
+builder.Services.AddDbContext<LibraryDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("Library")));
+
+builder.Services.AddScoped<ILibraryRepository, SqliteLibraryRepository>();
 
 builder.Services.AddCors(options =>
 {
@@ -29,6 +25,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+Console.WriteLine("ContentRoot: " + app.Environment.ContentRootPath);
+Console.WriteLine("ConnectionString: " + builder.Configuration.GetConnectionString("Library"));
 
 await app.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
 
@@ -92,6 +90,36 @@ api.MapGet("/users/{document}/loans", async (string document, ILibraryRepository
     var loans = await repository.GetLoansByUserAsync(document);
     return Results.Ok(loans.Select(LoanResponse.FromModel));
 });
+
+api.MapPost("/users", async Task<IResult>(
+    [FromBody] User user,
+    [FromServices] LibraryDbContext db) =>
+{
+    var cpf = user.Cpf.Trim();
+    var email = user.Email.Trim();
+
+    var exists = await db.Users.AnyAsync(u => u.Cpf == cpf || u.Email == email);
+
+    if (exists)
+    {
+        return Results.BadRequest(new { error = "Usuario já cadastrado com este CPF ou email."});
+    }
+
+    user.Cpf = cpf;
+    user.Email = email;
+
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/api/users/(user.Cpf)", new
+    {
+        user.Id,
+        user.Name,
+        user.Cpf,
+        user.Email
+    });
+});
+
 
 app.MapFallbackToFile("index.html");
 

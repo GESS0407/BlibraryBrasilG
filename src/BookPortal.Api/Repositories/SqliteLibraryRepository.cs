@@ -120,6 +120,7 @@ public sealed class SqliteLibraryRepository : ILibraryRepository
     public async Task<IReadOnlyList<Loan>> GetLoansByUserAsync(string userDocument)
     {
         var cpf = userDocument.Trim();
+        Console.WriteLine($"CPF pesquisado: {cpf}");
 
         var user = await _db.Users
             .AsNoTracking()

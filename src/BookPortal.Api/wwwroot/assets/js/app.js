@@ -1,3 +1,5 @@
+console.log("app.js carregou");
+
 const fallbackBooks = [
   {
     id: "22c217af-b85f-4e03-a4f9-ffbe432a7137",
@@ -122,7 +124,13 @@ const elements = {
   loanLookupForm: document.querySelector("#loanLookupForm"),
   loanDocument: document.querySelector("#loanDocument"),
   loanList: document.querySelector("#loanList"),
-  template: document.querySelector("#bookCardTemplate")
+  template: document.querySelector("#bookCardTemplate"),
+  userCreateForm: document.querySelector("#userCreateForm"),
+  userName: document.querySelector("#userName"),
+  userCpf: document.querySelector("#userCpf"),
+  userEmail: document.querySelector("#userEmail"),
+  userPassword: document.querySelector("#userPassword"),
+  userCreateMessage: document.querySelector("#userCreateMessage")
 };
 
 async function fetchJson(url, options) {
@@ -487,9 +495,62 @@ elements.clearFilters.addEventListener("click", () => {
 
 elements.dialogClose.addEventListener("click", () => elements.bookDialog.close());
 
-elements.loanLookupForm.addEventListener("submit", async (event) => {
+elements.loanLookupForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
+
+  console.log("Botao consultar emprestimos clicado");
+
   await lookupLoans(elements.loanDocument.value);
+});
+
+async function createUser() {
+  console.log("Tentando cadastrar usuario...");
+
+  const payload = {
+    name: elements.userName.value.trim(),
+    cpf: elements.userCpf.value.trim(),
+    email: elements.userEmail.value.trim(),
+    password: elements.userPassword.value.trim()
+  };
+
+  console.log(payload);
+
+  if (!payload.name || !payload.cpf || !payload.email || !payload.password) {
+    elements.userCreateMessage.textContent = "Preencha todos os campos.";
+    return;
+  }
+
+  try {
+    await fetchJson("/api/users", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    console.log("Usuario cadastrado");
+
+    elements.userCreateMessage.textContent = "Usuario cadastrado com sucesso.";
+    elements.userCreateForm.reset();
+  } catch (error) {
+    console.error(error);
+
+    elements.userCreateMessage.textContent = "Erro ao cadastrar usuario.";
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM carregado");
+
+  const form = document.querySelector("#userCreateForm");
+
+  console.log(form);
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    console.log("Botao cadastrar usuario clicado");
+
+    await createUser();
+  });
 });
 
 loadInitialData();

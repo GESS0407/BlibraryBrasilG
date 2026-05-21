@@ -23,6 +23,7 @@
           <a href="#catalog">Catalogo</a>
           <a href="#shelves">Prateleiras</a>
           <a href="#loans">Emprestimos</a>
+          <a href="#users">Usuarios</a>
         </nav>
       </div>
     </header>
@@ -102,6 +103,39 @@
         </form>
 
         <div id="loanList" class="loan-list" aria-live="polite"></div>
+      </section>
+
+      <section class="loan-area" id="users">
+        <div class="section-heading">
+          <p class="eyebrow">Usuarios</p>
+          <h2>Cadastro de usuario</h2>
+        </div>
+
+        <form class="loan-lookup" id="userCreateForm">
+          <label class="field" for="userName">
+            <span>Nome</span>
+            <input id="userName" type="text" placeholder="Nome completo" required />
+          </label>
+
+          <label class="field" for="userCpf">
+            <span>CPF</span>
+            <input id="userCpf" type="text" placeholder="Somente numeros" maxlength="11" required />
+          </label>
+
+          <label class="field" for="userEmail">
+            <span>Email</span>
+            <input id="userEmail" type="email" placeholder="email@exemplo.com" required />
+          </label>
+
+          <label class="field" for="userPassword">
+            <span>Senha</span>
+            <input id="userPassword" type="password" placeholder="Senha" required />
+          </label>
+
+          <button class="button button--primary" type="submit">Cadastrar usuario</button>
+        </form>
+
+        <div id="userCreateMessage" class="loan-list" aria-live="polite"></div>
       </section>
     </main>
 
