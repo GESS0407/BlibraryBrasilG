@@ -1,5 +1,3 @@
-console.log("app.js carregou");
-
 const fallbackBooks = [
   {
     id: "22c217af-b85f-4e03-a4f9-ffbe432a7137",
@@ -103,7 +101,8 @@ const state = {
   books: [],
   visibleBooks: [],
   shelves: [],
-  loans: []
+  loans: [],
+  profileIdentifier: ""
 };
 
 const elements = {
@@ -130,7 +129,16 @@ const elements = {
   userCpf: document.querySelector("#userCpf"),
   userEmail: document.querySelector("#userEmail"),
   userPassword: document.querySelector("#userPassword"),
-  userCreateMessage: document.querySelector("#userCreateMessage")
+  userCreateMessage: document.querySelector("#userCreateMessage"),
+  profileLoginForm: document.querySelector("#profileLoginForm"),
+  profileIdentifier: document.querySelector("#profileIdentifier"),
+  profileMessage: document.querySelector("#profileMessage"),
+  profilePanel: document.querySelector("#profilePanel"),
+  profileName: document.querySelector("#profileName"),
+  profileEmail: document.querySelector("#profileEmail"),
+  profileBorrowedBooks: document.querySelector("#profileBorrowedBooks"),
+  profilePurchasedBooks: document.querySelector("#profilePurchasedBooks"),
+  profileLogout: document.querySelector("#profileLogout")
 };
 
 async function fetchJson(url, options) {
@@ -140,7 +148,15 @@ async function fetchJson(url, options) {
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    let message = `Request failed: ${response.status}`;
+    try {
+      const body = await response.json();
+      message = body.error || message;
+    } catch {
+      // Keep the generic message when the server does not return JSON.
+    }
+
+    throw new Error(message);
   }
 
   return response.json();
@@ -164,6 +180,12 @@ async function loadInitialData() {
   renderStats();
   renderCatalog();
   renderShelves();
+
+  const savedIdentifier = window.localStorage.getItem("libraryProfileIdentifier");
+  if (savedIdentifier) {
+    elements.profileIdentifier.value = savedIdentifier;
+    await loadUserProfile(savedIdentifier);
+  }
 }
 
 function buildFallbackShelves(books) {
@@ -350,6 +372,7 @@ function buildBorrowForm(book) {
 
   const name = buildField("Nome", "text", "borrowerName");
   const documentField = buildField("Documento", "text", "borrowerDocument");
+  documentField.input.value = state.profileIdentifier;
   fields.append(name.label, documentField.label);
 
   const status = document.createElement("div");
@@ -361,10 +384,22 @@ function buildBorrowForm(book) {
   button.type = "submit";
   button.textContent = book.copiesAvailable > 0 ? "Reservar" : "Fila de espera";
 
-  form.append(fields, button, status);
+  const buyButton = document.createElement("button");
+  buyButton.className = "button button--ghost";
+  buyButton.type = "button";
+  buyButton.textContent = "Comprar";
+
+  const actions = document.createElement("div");
+  actions.className = "form-grid";
+  actions.append(button, buyButton);
+
+  form.append(fields, actions, status);
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     await borrowBook(book, name.input.value, documentField.input.value, status);
+  });
+  buyButton.addEventListener("click", async () => {
+    await buyBook(book, documentField.input.value, status);
   });
 
   return form;
@@ -403,6 +438,9 @@ async function borrowBook(book, userName, userDocument, status) {
       })
     });
     status.textContent = "Emprestimo registrado.";
+    if (state.profileIdentifier) {
+      await loadUserProfile(state.profileIdentifier);
+    }
   } catch {
     if (book.copiesAvailable <= 0) {
       status.textContent = "Obra indisponivel no preview local.";
@@ -424,6 +462,33 @@ async function borrowBook(book, userName, userDocument, status) {
 
   renderStats();
   applyFilters();
+}
+
+async function buyBook(book, userIdentifier, status) {
+  const identifier = userIdentifier.trim() || state.profileIdentifier;
+  if (!identifier) {
+    status.textContent = "Informe CPF ou email para comprar.";
+    return;
+  }
+
+  try {
+    await fetchJson("/api/purchases", {
+      method: "POST",
+      body: JSON.stringify({
+        bookId: book.id,
+        userIdentifier: identifier,
+        quantity: 1,
+        price: 0
+      })
+    });
+
+    status.textContent = "Livro adicionado aos comprados.";
+    state.profileIdentifier = identifier;
+    elements.profileIdentifier.value = identifier;
+    await loadUserProfile(identifier);
+  } catch (error) {
+    status.textContent = error.message || "Nao foi possivel comprar este livro.";
+  }
 }
 
 async function lookupLoans(documentValue) {
@@ -466,12 +531,107 @@ function renderLoans(loans) {
   }
 }
 
+async function loadUserProfile(identifier) {
+  const normalizedIdentifier = identifier.trim();
+  if (!normalizedIdentifier) {
+    renderProfileMessage("Informe CPF ou email para acessar o perfil.", true);
+    return;
+  }
+
+  try {
+    await fetchJson("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ identifier: normalizedIdentifier })
+    });
+
+    const profile = await fetchJson(`/api/users/profile?identifier=${encodeURIComponent(normalizedIdentifier)}`);
+    state.profileIdentifier = normalizedIdentifier;
+    window.localStorage.setItem("libraryProfileIdentifier", normalizedIdentifier);
+    renderProfile(profile);
+    renderProfileMessage("", false);
+  } catch (error) {
+    state.profileIdentifier = "";
+    elements.profilePanel.hidden = true;
+    renderProfileMessage(error.message || "Nao foi possivel acessar o perfil.", true);
+  }
+}
+
+function renderProfile(profile) {
+  elements.profilePanel.hidden = false;
+  elements.profileName.textContent = profile.name;
+  elements.profileEmail.textContent = `${profile.email} | CPF ${profile.cpf}`;
+  renderProfileBookList(elements.profileBorrowedBooks, profile.borrowedBooks, "borrowed");
+  renderProfileBookList(elements.profilePurchasedBooks, profile.purchasedBooks, "purchased");
+}
+
+function renderProfileBookList(container, books, type) {
+  container.replaceChildren();
+
+  if (!books || books.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = type === "borrowed"
+      ? "Nenhum livro emprestado para este usuario."
+      : "Nenhum livro comprado para este usuario.";
+    container.append(empty);
+    return;
+  }
+
+  for (const book of books) {
+    const item = document.createElement("article");
+    item.className = "profile-book";
+
+    const title = document.createElement("strong");
+    title.textContent = book.title;
+
+    const author = document.createElement("span");
+    author.textContent = `${book.author} | ${book.category} | ${book.format}`;
+
+    const status = document.createElement("span");
+    status.textContent = type === "borrowed"
+      ? buildBorrowedStatus(book)
+      : `Compra: ${book.quantity} unidade(s) | ${formatCurrency(book.price)} | ${formatDate(book.createdAt)}`;
+
+    item.append(title, author, status);
+    container.append(item);
+  }
+}
+
+function buildBorrowedStatus(book) {
+  if (book.returnedAt) {
+    return `Devolvido em ${formatDate(book.returnedAt)}`;
+  }
+
+  return `Emprestado em ${formatDate(book.borrowedAt)} | Devolucao: ${formatDate(book.dueAt)}`;
+}
+
+function renderProfileMessage(message, isError) {
+  elements.profileMessage.replaceChildren();
+
+  if (!message) {
+    return;
+  }
+
+  const item = document.createElement("p");
+  item.className = "empty-state";
+  item.textContent = message;
+  item.style.color = isError ? "var(--red)" : "var(--green-dark)";
+  elements.profileMessage.append(item);
+}
+
 function formatDate(value) {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric"
   }).format(new Date(value));
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  }).format(value);
 }
 
 elements.searchForm.addEventListener("submit", (event) => {
@@ -498,22 +658,16 @@ elements.dialogClose.addEventListener("click", () => elements.bookDialog.close()
 elements.loanLookupForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  console.log("Botao consultar emprestimos clicado");
-
   await lookupLoans(elements.loanDocument.value);
 });
 
 async function createUser() {
-  console.log("Tentando cadastrar usuario...");
-
   const payload = {
     name: elements.userName.value.trim(),
     cpf: elements.userCpf.value.trim(),
     email: elements.userEmail.value.trim(),
     password: elements.userPassword.value.trim()
   };
-
-  console.log(payload);
 
   if (!payload.name || !payload.cpf || !payload.email || !payload.password) {
     elements.userCreateMessage.textContent = "Preencha todos os campos.";
@@ -526,31 +680,31 @@ async function createUser() {
       body: JSON.stringify(payload)
     });
 
-    console.log("Usuario cadastrado");
-
     elements.userCreateMessage.textContent = "Usuario cadastrado com sucesso.";
     elements.userCreateForm.reset();
+    elements.profileIdentifier.value = payload.cpf;
+    await loadUserProfile(payload.cpf);
   } catch (error) {
-    console.error(error);
-
-    elements.userCreateMessage.textContent = "Erro ao cadastrar usuario.";
+    elements.userCreateMessage.textContent = error.message || "Erro ao cadastrar usuario.";
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM carregado");
+elements.userCreateForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await createUser();
+});
 
-  const form = document.querySelector("#userCreateForm");
+elements.profileLoginForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await loadUserProfile(elements.profileIdentifier.value);
+});
 
-  console.log(form);
-
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    console.log("Botao cadastrar usuario clicado");
-
-    await createUser();
-  });
+elements.profileLogout?.addEventListener("click", () => {
+  state.profileIdentifier = "";
+  elements.profileIdentifier.value = "";
+  elements.profilePanel.hidden = true;
+  window.localStorage.removeItem("libraryProfileIdentifier");
+  renderProfileMessage("Perfil desconectado.", false);
 });
 
 loadInitialData();

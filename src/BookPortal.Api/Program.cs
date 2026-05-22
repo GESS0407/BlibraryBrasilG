@@ -89,6 +89,94 @@ api.MapGet("/users/{document}/loans", async (string document, ILibraryRepository
     return Results.Ok(loans.Select(LoanResponse.FromModel));
 });
 
+api.MapPost("/auth/login", async Task<IResult> (
+    UserLoginRequest request,
+    LibraryDbContext db) =>
+{
+    var user = await FindUserByIdentifierAsync(db, request.Identifier);
+    if (user is null)
+    {
+        return Results.NotFound(new { error = "Usuario nao encontrado." });
+    }
+
+    return Results.Ok(new
+    {
+        user.Id,
+        user.Name,
+        user.Cpf,
+        user.Email
+    });
+});
+
+api.MapGet("/users/profile", async Task<IResult> (
+    string identifier,
+    LibraryDbContext db) =>
+{
+    var user = await FindUserByIdentifierAsync(db, identifier);
+    if (user is null)
+    {
+        return Results.NotFound(new { error = "Usuario nao encontrado." });
+    }
+
+    var borrowedRows = await (
+        from loan in db.Loans.AsNoTracking()
+        join book in db.Books.AsNoTracking() on loan.BookId equals book.Id
+        where loan.UserId == user.Id
+        select new { Loan = loan, Book = book })
+        .ToListAsync();
+
+    var borrowedBooks = borrowedRows
+        .OrderByDescending(row => row.Loan.BorrowedAt)
+        .Select(row => UserLoanBookResponse.FromData(row.Loan, row.Book))
+        .ToList();
+
+    var purchasedRows = await (
+        from purchase in db.Purchases.AsNoTracking()
+        join book in db.Books.AsNoTracking() on purchase.BookId equals book.Id
+        where purchase.UserId == user.Id
+        select new { Purchase = purchase, Book = book })
+        .ToListAsync();
+
+    var purchasedBooks = purchasedRows
+        .OrderByDescending(row => row.Purchase.CreatedAt)
+        .Select(row => UserPurchaseBookResponse.FromData(row.Purchase, row.Book))
+        .ToList();
+
+    return Results.Ok(UserProfileResponse.FromData(user, borrowedBooks, purchasedBooks));
+});
+
+api.MapPost("/purchases", async Task<IResult> (
+    PurchaseRequest request,
+    LibraryDbContext db) =>
+{
+    var user = await FindUserByIdentifierAsync(db, request.UserIdentifier);
+    if (user is null)
+    {
+        return Results.NotFound(new { error = "Usuario nao encontrado." });
+    }
+
+    var book = await db.Books.FirstOrDefaultAsync(book => book.Id == request.BookId);
+    if (book is null)
+    {
+        return Results.NotFound(new { error = "Obra nao encontrada." });
+    }
+
+    var purchase = new Purchase
+    {
+        UserId = user.Id,
+        BookId = book.Id,
+        Price = Math.Max(0, request.Price),
+        Quantity = Math.Max(1, request.Quantity)
+    };
+
+    db.Purchases.Add(purchase);
+    await db.SaveChangesAsync();
+
+    return Results.Created(
+        $"/api/users/profile?identifier={Uri.EscapeDataString(user.Cpf)}",
+        UserPurchaseBookResponse.FromData(purchase, book));
+});
+
 api.MapPost("/users", async Task<IResult>(
     [FromBody] User user,
     [FromServices] LibraryDbContext db) =>
@@ -122,3 +210,15 @@ api.MapPost("/users", async Task<IResult>(
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+static Task<User?> FindUserByIdentifierAsync(LibraryDbContext db, string identifier)
+{
+    var normalizedIdentifier = identifier.Trim();
+    var normalizedEmail = normalizedIdentifier.ToLower();
+
+    return db.Users
+        .AsNoTracking()
+        .FirstOrDefaultAsync(user =>
+            user.Cpf == normalizedIdentifier ||
+            user.Email.ToLower() == normalizedEmail);
+}
