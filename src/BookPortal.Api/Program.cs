@@ -25,8 +25,6 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-Console.WriteLine("ContentRoot: " + app.Environment.ContentRootPath);
-Console.WriteLine("ConnectionString: " + builder.Configuration.GetConnectionString("Library"));
 
 await app.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
 
@@ -102,7 +100,7 @@ api.MapPost("/users", async Task<IResult>(
 
     if (exists)
     {
-        return Results.BadRequest(new { error = "Usuario já cadastrado com este CPF ou email."});
+        return Results.BadRequest(new { error = "Usuario ja cadastrado com este CPF ou email." });
     }
 
     user.Cpf = cpf;
@@ -111,7 +109,7 @@ api.MapPost("/users", async Task<IResult>(
     db.Users.Add(user);
     await db.SaveChangesAsync();
 
-    return Results.Created($"/api/users/(user.Cpf)", new
+    return Results.Created($"/api/users/{user.Cpf}", new
     {
         user.Id,
         user.Name,

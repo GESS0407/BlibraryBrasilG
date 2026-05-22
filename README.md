@@ -6,7 +6,7 @@ An original digital-library website project inspired by the public structure of 
 
 - Backend: ASP.NET Core minimal API in C#
 - Frontend: Vanilla JavaScript, HTML, CSS served from `wwwroot`
-- Data: In-memory seed data by default, with SQLite-ready EF Core structure
+- Data: SQLite through Entity Framework Core, with seed data on startup
 
 ## Project Layout
 
@@ -52,12 +52,10 @@ Open `http://127.0.0.1:5177/`. API requests will fall back to local preview data
 
 ## SQLite Integration
 
-The API is prepared with `LibraryDbContext` and `SqliteLibraryRepository`.
-To switch from in-memory data to SQLite:
+The API uses `LibraryDbContext` and `SqliteLibraryRepository` by default.
+The current configuration stores data in `library.db`.
 
-1. Set `Database:UseSqlite` to `true` in `appsettings.Development.json` or `appsettings.json`.
-2. Confirm the `ConnectionStrings:Library` value.
-3. Add and apply migrations:
+To create or update the database schema manually:
 
 ```powershell
 dotnet tool install --global dotnet-ef
