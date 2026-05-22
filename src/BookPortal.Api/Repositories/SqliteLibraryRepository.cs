@@ -91,11 +91,12 @@ public sealed class SqliteLibraryRepository : ILibraryRepository
 
     public async Task<int> GetActiveLoanCountAsync(string userDocument)
     {
-        var cpf = userDocument.Trim();
+        var identifier = userDocument.Trim();
+        var email = identifier.ToLower();
 
         var user = await _db.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(user => user.Cpf == cpf);
+            .FirstOrDefaultAsync(user => user.Cpf == identifier || user.Email.ToLower() == email);
         if (user is null)
         {
             return 0;
@@ -119,32 +120,51 @@ public sealed class SqliteLibraryRepository : ILibraryRepository
 
     public async Task<IReadOnlyList<Loan>> GetLoansByUserAsync(string userDocument)
     {
-        var cpf = userDocument.Trim();
-        Console.WriteLine($"CPF pesquisado: {cpf}");
+        var identifier = userDocument.Trim();
+        var email = identifier.ToLower();
 
         var user = await _db.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(user => user.Cpf == cpf);
+            .FirstOrDefaultAsync(user => user.Cpf == identifier || user.Email.ToLower() == email);
 
         if (user is null)
         {
             return [];
         }
 
-        var loans = await _db.Loans
-            .AsNoTracking()
-            .Where(loan => loan.UserId == user.Id)
-            .OrderByDescending(loan => loan.BorrowedAt)
+        var rows = await (
+            from loan in _db.Loans.AsNoTracking()
+            join book in _db.Books.AsNoTracking() on loan.BookId equals book.Id
+            where loan.UserId == user.Id
+            select new { Loan = loan, Book = book })
             .ToListAsync();
 
-        return loans.Select(loan => loan.ToModel()).ToList();
+        var loans = rows
+            .OrderByDescending(row => row.Loan.BorrowedAt)
+            .Select(row => new Loan
+            {
+                Id = row.Loan.Id,
+                BookId = row.Loan.BookId,
+                Book = row.Book.ToModel(),
+                UserId = row.Loan.UserId,
+                User = user,
+                BorrowedAt = row.Loan.BorrowedAt,
+                DueAt = row.Loan.DueAt,
+                ReturnedAt = row.Loan.ReturnedAt
+            })
+            .ToList();
+
+        return loans;
     }
 
-    public async Task<User?> GetUserByCpfAsync(string cpf)
+    public async Task<User?> GetUserByIdentifierAsync(string identifier)
     {
+        var normalizedIdentifier = identifier.Trim();
+        var email = normalizedIdentifier.ToLower();
+
         return await _db.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(user => user.Cpf == cpf.Trim());
+            .FirstOrDefaultAsync(user => user.Cpf == normalizedIdentifier || user.Email.ToLower() == email);
     }   
 }
 

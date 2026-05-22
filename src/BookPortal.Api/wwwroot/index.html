@@ -24,6 +24,7 @@
           <a href="#shelves">Prateleiras</a>
           <a href="#loans">Emprestimos</a>
           <a href="#users">Usuarios</a>
+          <a href="#profile">Perfil</a>
         </nav>
       </div>
     </header>
@@ -136,6 +137,46 @@
         </form>
 
         <div id="userCreateMessage" class="loan-list" aria-live="polite"></div>
+      </section>
+
+      <section class="loan-area" id="profile">
+        <div class="section-heading">
+          <p class="eyebrow">Perfil</p>
+          <h2>Minha biblioteca</h2>
+        </div>
+
+        <form class="loan-lookup" id="profileLoginForm">
+          <label class="field" for="profileIdentifier">
+            <span>CPF ou email</span>
+            <input id="profileIdentifier" type="text" placeholder="Digite seu CPF ou email" required />
+          </label>
+          <button class="button button--primary" type="submit">Entrar</button>
+        </form>
+
+        <div id="profileMessage" class="loan-list" aria-live="polite"></div>
+
+        <div class="profile-panel" id="profilePanel" hidden>
+          <div class="profile-summary">
+            <div>
+              <p class="eyebrow">Usuario logado</p>
+              <h3 id="profileName"></h3>
+              <p id="profileEmail"></p>
+            </div>
+            <button class="button button--ghost" id="profileLogout" type="button">Sair</button>
+          </div>
+
+          <div class="profile-grid">
+            <section>
+              <h3>Livros emprestados</h3>
+              <div id="profileBorrowedBooks" class="profile-book-list"></div>
+            </section>
+
+            <section>
+              <h3>Livros comprados</h3>
+              <div id="profilePurchasedBooks" class="profile-book-list"></div>
+            </section>
+          </div>
+        </div>
       </section>
     </main>
 

@@ -22,7 +22,7 @@ public sealed class BorrowingService
         {
             return BorrowResult.Failure("Informe um documento de usuario para reservar a obra.");
         }
-        var user = await _repository.GetUserByCpfAsync(request.UserDocument);
+        var user = await _repository.GetUserByIdentifierAsync(request.UserDocument);
         
         if (user is null)
         {

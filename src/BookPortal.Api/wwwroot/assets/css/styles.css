@@ -448,6 +448,65 @@ main {
   color: var(--muted);
 }
 
+.profile-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.profile-summary {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+}
+
+.profile-summary h3,
+.profile-summary p {
+  margin: 0;
+}
+
+.profile-summary p:not(.eyebrow) {
+  color: var(--muted);
+}
+
+.profile-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 1rem;
+}
+
+.profile-grid h3 {
+  margin: 0 0 0.75rem;
+}
+
+.profile-book-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.profile-book {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+
+.profile-book strong,
+.profile-book span {
+  display: block;
+}
+
+.profile-book span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-top: 0.25rem;
+}
+
 .book-dialog {
   border: 0;
   border-radius: 8px;
@@ -549,8 +608,14 @@ main {
 
   .search-panel,
   .loan-lookup,
-  .form-grid {
+  .form-grid,
+  .profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .profile-summary {
+    align-items: start;
+    flex-direction: column;
   }
 
   .masthead h1 {
