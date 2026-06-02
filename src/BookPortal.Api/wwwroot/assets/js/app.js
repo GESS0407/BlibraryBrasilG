@@ -138,7 +138,9 @@ const elements = {
   profileEmail: document.querySelector("#profileEmail"),
   profileBorrowedBooks: document.querySelector("#profileBorrowedBooks"),
   profilePurchasedBooks: document.querySelector("#profilePurchasedBooks"),
-  profileLogout: document.querySelector("#profileLogout")
+  profileLogout: document.querySelector("#profileLogout"),
+  navToggle: document.querySelector(".topnav__toggle"),
+  topbar: document.querySelector(".topbar")
 };
 
 async function fetchJson(url, options) {
@@ -705,6 +707,22 @@ elements.profileLogout?.addEventListener("click", () => {
   elements.profilePanel.hidden = true;
   window.localStorage.removeItem("libraryProfileIdentifier");
   renderProfileMessage("Perfil desconectado.", false);
+});
+
+elements.navToggle?.addEventListener("click", () => {
+  const expanded = elements.navToggle.getAttribute("aria-expanded") === "true";
+  elements.navToggle.setAttribute("aria-expanded", String(!expanded));
+  elements.topbar?.classList.toggle("menu-open", !expanded);
+});
+
+const navLinks = document.querySelectorAll(".topnav a");
+navLinks.forEach((link) => {
+  link.addEventListener("click", () => {
+    if (elements.topbar?.classList.contains("menu-open")) {
+      elements.topbar.classList.remove("menu-open");
+      elements.navToggle?.setAttribute("aria-expanded", "false");
+    }
+  });
 });
 
 loadInitialData();
