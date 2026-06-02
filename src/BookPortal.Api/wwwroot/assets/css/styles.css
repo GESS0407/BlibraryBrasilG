@@ -5,8 +5,8 @@
   --line: #d7e0e5;
   --surface: #ffffff;
   --surface-alt: #f4f7f4;
-  --green: #1f7a5a;
-  --green-dark: #145c44;
+  --blue: #071bf1;
+  --blue-dark: #071bf1;
   --blue: #255f85;
   --yellow: #f0c04f;
   --red: #b54536;
@@ -82,7 +82,7 @@ a {
 .brand__mark {
   align-items: center;
   aspect-ratio: 1;
-  background: var(--green);
+  background: var(--blue);
   border-radius: 8px;
   color: white;
   display: inline-flex;
@@ -116,7 +116,7 @@ a {
 .topnav a:hover,
 .topnav a:focus {
   background: #e8f1ec;
-  color: var(--green-dark);
+  color: var(--blue-dark);
 }
 
 main {
@@ -141,7 +141,7 @@ main {
 }
 
 .eyebrow {
-  color: var(--green-dark);
+  color: var(--blue-dark);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -214,7 +214,7 @@ main {
 }
 
 .checkline input {
-  accent-color: var(--green);
+  accent-color: var(--blue);
   height: 1.1rem;
   width: 1.1rem;
 }
@@ -232,13 +232,13 @@ main {
 }
 
 .button--primary {
-  background: var(--green);
+  background: var(--blue);
   color: white;
 }
 
 .button--primary:hover,
 .button--primary:focus {
-  background: var(--green-dark);
+  background: var(--blue-dark);
 }
 
 .button--ghost {
@@ -342,7 +342,7 @@ main {
 }
 
 .book-card__category {
-  color: var(--green-dark);
+  color: var(--blue-dark);
   font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -362,7 +362,7 @@ main {
 }
 
 .availability {
-  color: var(--green-dark);
+  color: var(--blue-dark);
   font-size: 0.84rem;
   font-weight: 800;
 }
@@ -588,7 +588,7 @@ main {
 }
 
 .toast {
-  color: var(--green-dark);
+  color: var(--blue-dark);
   font-weight: 800;
   min-height: 1.25rem;
 }
