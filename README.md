@@ -1,14 +1,14 @@
 # Biblioteca Digital
 
-An original digital-library website project inspired by the public structure of MEC Livros: catalog discovery, curated shelves, book details, and a borrowing flow.
+Um projeto original de site de biblioteca digital inspirado na estrutura pública do MEC Livros: descoberta de catálogo, estantes com curadoria, detalhes do livro e fluxo de empréstimo.
 
 ## Stack
 
-- Backend: ASP.NET Core minimal API in C#
-- Frontend: Vanilla JavaScript, HTML, CSS served from `wwwroot`
-- Data: SQLite through Entity Framework Core, with seed data on startup
+- Backend: ASP.NET Core minimal API em C#
+- Frontend: Vanilla JavaScript, HTML, CSS servidos a partir de `wwwroot`
+- Dados: SQLite através do Entity Framework Core, com dados iniciais (seed data) na inicialização
 
-## Project Layout
+## Estrutura do Projeto
 
 ```text
 src/
@@ -27,35 +27,35 @@ src/
     wwwroot/
 ```
 
-## Run
+## Como Executar
 
-Install the .NET SDK, then:
+Instale o .NET SDK e, em seguida:
 
 ```powershell
 dotnet restore .\src\BookPortal.Api\BookPortal.Api.csproj
 dotnet run --project .\src\BookPortal.Api\BookPortal.Api.csproj
 ```
 
-Open the URL printed by `dotnet run`.
+Abra a URL exibida pelo `dotnet run`.
 
-You can also open `BookPortal.sln` in Visual Studio.
+Você também pode abrir o `BookPortal.sln` no Visual Studio.
 
-## Static Frontend Preview
+## Visualização Estática do Frontend
 
-The frontend can be previewed without the .NET SDK:
+O frontend pode ser pré-visualizado sem o .NET SDK:
 
 ```powershell
 node .\scripts\static-preview-server.js .\src\BookPortal.Api\wwwroot 5177
 ```
 
-Open `http://127.0.0.1:5177/`. API requests will fall back to local preview data.
+Abra `http://127.0.0.1:5177/`. As requisições de API usarão dados de pré-visualização locais como alternativa (fallback).
 
-## SQLite Integration
+## Integração com SQLite
 
-The API uses `LibraryDbContext` and `SqliteLibraryRepository` by default.
-The current configuration stores data in `library.db`.
+A API usa `LibraryDbContext` e `SqliteLibraryRepository` por padrão.
+A configuração atual armazena os dados em `library.db`.
 
-To create or update the database schema manually:
+Para criar ou atualizar o esquema do banco de dados manualmente:
 
 ```powershell
 dotnet tool install --global dotnet-ef
@@ -63,4 +63,4 @@ dotnet ef migrations add InitialLibrarySchema --project .\src\BookPortal.Api\Boo
 dotnet ef database update --project .\src\BookPortal.Api\BookPortal.Api.csproj
 ```
 
-When `Database:SeedOnStartup` is `true`, the app inserts the sample catalog if the `Books` table is empty.
+Quando `Database:SeedOnStartup` for `true`, o aplicativo insere o catálogo de exemplo se a tabela `Books` estiver vazia.
